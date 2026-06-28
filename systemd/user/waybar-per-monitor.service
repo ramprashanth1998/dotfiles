@@ -1,0 +1,13 @@
+[Unit]
+Description=Per-monitor Waybar output controller (hide laptop bar when external attached)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/ramprashanth/.config/hypr/scripts/waybar-per-monitor.py
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target
