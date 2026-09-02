@@ -1,0 +1,16 @@
+# Entry point for interactive zsh. Symlinked to ~/.zshrc by install.sh.
+#
+# Ported from the fish + Omarchy setup on Linux. Layout mirrors what Omarchy
+# split across default/bash/{envs,aliases,functions,init}, so changes on either
+# machine stay easy to compare.
+
+export DOTFILES="${DOTFILES:-$HOME/dotfiles}"
+
+source "$DOTFILES/zsh/envs.zsh"
+source "$DOTFILES/zsh/options.zsh"
+source "$DOTFILES/zsh/aliases.zsh"
+source "$DOTFILES/zsh/functions.zsh"
+source "$DOTFILES/zsh/init.zsh"
+
+# Machine-local overrides that shouldn't live in git (work tokens, one-off paths)
+[[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"

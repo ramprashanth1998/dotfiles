@@ -1,0 +1,15 @@
+# List active rsw watches
+local state="$HOME/.local/state/rsw"
+local found=0 f pid src dest
+
+for f in "$state"/*(N); do
+  IFS=$'\t' read -r pid src dest < "$f"
+  if kill -0 "$pid" 2>/dev/null; then
+    echo "$pid: $src -> $dest"
+    found=1
+  else
+    rm -f "$f"   # reap a watch that died on its own
+  fi
+done
+
+(( found )) || echo "No active watches"

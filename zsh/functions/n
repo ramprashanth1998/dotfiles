@@ -1,0 +1,6 @@
+# nvim, defaulting to the current directory
+if (( $# == 0 )); then
+  command nvim .
+else
+  command nvim "$@"
+fi

@@ -1,0 +1,46 @@
+# True for an interactive session: a destination and no remote command.
+local -a value_opts
+value_opts=(B b c D E e F I i J L l m O o P p Q R S W w)
+local -a orig_argv args
+orig_argv=("$@")
+args=("$@")
+
+local dest="" opts_done=0 arg letters ch n i
+while (( ${#args} > 0 )); do
+  arg="${args[1]}"
+  shift args
+
+  if (( ! opts_done )) && [[ "$arg" == "--" ]]; then
+    opts_done=1
+  elif (( ! opts_done )) && [[ ${#arg} -gt 1 && "$arg" == -* ]]; then
+    letters="${arg[2,-1]}"
+    n=${#letters}
+    for (( i = 1; i <= n; i++ )); do
+      ch="${letters[i]}"
+      if (( ${value_opts[(I)$ch]} )); then
+        # An option that takes a value: it swallows the rest of this cluster,
+        # or the next argument when it ends the cluster.
+        (( i == n )) && shift args
+        break
+      fi
+    done
+  elif [[ -z "$dest" ]]; then
+    dest="$arg"
+  else
+    return 1   # a remote command follows the destination
+  fi
+done
+
+[[ -n "$dest" ]] || return 1
+
+local -a resolved
+resolved=(${(f)"$(command ssh -G "${orig_argv[@]}" 2>/dev/null)"}) || return 1
+(( ${#resolved} )) || return 1
+
+local line
+for line in "${resolved[@]}"; do
+  if [[ "${line:l}" == remotecommand\ * ]]; then
+    [[ "${line:l}" == "remotecommand none" ]] || return 1
+  fi
+done
+return 0

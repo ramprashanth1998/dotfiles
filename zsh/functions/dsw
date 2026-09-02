@@ -1,0 +1,15 @@
+# Stop active rsw watches
+local state="$HOME/.local/state/rsw"
+local found=0 f pid src dest
+
+for f in "$state"/*(N); do
+  IFS=$'\t' read -r pid src dest < "$f"
+  # Negative pid kills the whole process group, so the fswatch child goes too.
+  if kill -- -"$pid" 2>/dev/null || kill "$pid" 2>/dev/null; then
+    echo "Stopped watch (pid $pid)"
+    found=1
+  fi
+  rm -f "$f"
+done
+
+(( found )) || echo "No active watches"

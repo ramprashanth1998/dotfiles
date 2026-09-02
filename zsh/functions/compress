@@ -1,0 +1,2 @@
+# Tar+gzip a directory into <dir>.tar.gz
+tar -czf "${1%/}.tar.gz" "${1%/}"

@@ -1,0 +1,14 @@
+# Stop forwarded SSH ports started with fip
+if (( $# == 0 )); then
+  echo "Usage: dip <port1> [port2] ..."
+  return 1
+fi
+
+local port
+for port in "$@"; do
+  if pkill -f "ssh.*-L $port:localhost:$port"; then
+    echo "Stopped forwarding port $port"
+  else
+    echo "No forwarding on port $port"
+  fi
+done

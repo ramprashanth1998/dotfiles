@@ -1,0 +1,2 @@
+# Extract a .tar.gz
+tar -xzf "$@"

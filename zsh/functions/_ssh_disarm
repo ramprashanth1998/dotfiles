@@ -1,0 +1,2 @@
+# Disarm mouse tracking, focus reporting, and the alternate screen, and show the cursor again.
+printf '\e[?1000l\e[?1002l\e[?1003l\e[?1006l\e[?1004l\e[?1049l\e[?25h'

@@ -1,0 +1,35 @@
+# Wrap ssh to clean up the terminal and reconnect when a connection drops.
+#
+# A remote tmux, herdr, or editor arms terminal modes over the SSH pipe (mouse
+# tracking, focus reporting, the alternate screen) that only it can disarm. If
+# the connection dies instead of exiting cleanly, those modes stay armed on the
+# local terminal, and every mouse move floods the prompt with escape junk.
+local started=$(date +%s)
+command ssh "$@"
+local rc=$?
+
+[[ -t 1 ]] || return $rc
+_ssh_disarm
+
+# Reconnect only when an interactive session drops: ssh exits 255 for
+# transport failures, but a fast 255 with no established session is a
+# connect/auth failure, a remote command's own 255 passes through
+# indistinguishably and must not replay its side effects, and redirected
+# stdin would feed the remaining piped input to a fresh remote shell.
+(( rc != 255 )) && return $rc
+[[ -t 0 ]] || return $rc
+_ssh_interactive "$@" || return $rc
+local elapsed=$(( $(date +%s) - started ))
+(( elapsed < 30 )) && return $rc
+
+# Retry in the foreground: Ctrl-C reaches the whole foreground process
+# group, so it cancels both the in-flight attempt and the loop itself.
+# Keep retrying fast failures, since a rebooting server refuses connections too.
+while true; do
+  echo "Connection lost. Reconnecting (Ctrl-C to stop)..."
+  sleep 2
+  command ssh "$@"
+  rc=$?
+  _ssh_disarm
+  (( rc != 255 )) && return $rc
+done

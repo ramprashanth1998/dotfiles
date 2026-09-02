@@ -1,0 +1,16 @@
+# Login shells. Symlinked to ~/.zprofile.
+#
+# Homebrew's shellenv must run before anything else needs brew binaries on PATH.
+# Apple silicon installs to /opt/homebrew, Intel to /usr/local.
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+# mise shims and ~/.local/bin appended so system binaries keep precedence --
+# same ordering rule as Omarchy's env-bootstrap. Login shells and `zsh -lc`
+# need these without an interactive rc.
+typeset -U path
+path+=("$HOME/.local/share/mise/shims" "$HOME/.local/bin")
+export PATH

@@ -1,0 +1,12 @@
+# Forward local ports to a remote host over SSH
+if (( $# < 2 )); then
+  echo "Usage: fip <host> <port1> [port2] ..."
+  return 1
+fi
+
+local host="$1"
+shift
+local port
+for port in "$@"; do
+  ssh -f -N -L "$port:localhost:$port" "$host" && echo "Forwarding localhost:$port -> $host:$port"
+done

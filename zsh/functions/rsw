@@ -1,0 +1,36 @@
+# Start an rsync-on-change watcher in the background
+#
+# macOS port: inotifywait -> fswatch, and there is no setsid, so the watcher is
+# a disowned background job. Interactive zsh has job control on, which puts that
+# job in its own process group, so `kill -- -$pid` in dsw still takes the whole
+# tree down. Watches are recorded in a state dir because macOS pgrep can't print
+# full argv the way `pgrep -af` does on Linux.
+if (( $# != 2 )); then
+  echo "Usage: rsw <source> <destination>"
+  return 1
+fi
+
+if ! command -v fswatch &>/dev/null; then
+  echo "rsw needs fswatch (brew install fswatch)"
+  return 1
+fi
+
+local src="${1%/}"
+local dest="$2"
+local sockets="$HOME/.ssh/sockets"
+local state="$HOME/.local/state/rsw"
+mkdir -p "$sockets" "$state"
+
+local rsh="ssh -o ControlMaster=auto -o ControlPath=$sockets/rsw-%r@%h:%p -o ControlPersist=yes"
+
+RSYNC_RSH="$rsh" nohup zsh -c '
+  rsync -a "$1/" "$2"
+  while fswatch -1 -r "$1" >/dev/null; do
+    rsync -a "$1/" "$2"
+  done
+' rsw-watch "$src" "$dest" >/dev/null 2>&1 &
+
+local pid=$!
+disown
+print -r -- "$pid	$src	$dest" > "$state/$pid"
+echo "Watching $src -> $dest"
